@@ -3,9 +3,275 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Laptop Price Predictor</title>
+    <title>Laptop Price Predictor | Machine Learning</title>
+    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --bg-gradient: linear-gradient(135deg, #0f172a 0%, #1e1b4b 50%, #31104b 100%);
+            --card-bg: rgba(30, 41, 59, 0.7);
+            --card-border: rgba(255, 255, 255, 0.1);
+            --primary: #8b5cf6;
+            --primary-hover: #7c3aed;
+            --accent: #06b6d4;
+            --text-main: #f8fafc;
+            --text-muted: #94a3b8;
+            --input-bg: rgba(15, 23, 42, 0.6);
+        }
+
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+            font-family: 'Outfit', sans-serif;
+        }
+
+        body {
+            background: var(--bg-gradient);
+            min-height: 100vh;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            color: var(--text-main);
+            padding: 2rem 1rem;
+        }
+
+        .container {
+            width: 100%;
+            max-width: 900px;
+            background: var(--card-bg);
+            backdrop-filter: blur(16px);
+            border: 1px solid var(--card-border);
+            border-radius: 24px;
+            padding: 2.5rem;
+            box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.5);
+        }
+
+        .header {
+            text-align: center;
+            margin-bottom: 2rem;
+        }
+
+        .header h1 {
+            font-size: 2.2rem;
+            font-weight: 700;
+            background: linear-gradient(to right, #a78bfa, #38bdf8);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            margin-bottom: 0.5rem;
+        }
+
+        .header p {
+            color: var(--text-muted);
+            font-size: 1rem;
+        }
+
+        .result-box {
+            background: linear-gradient(135deg, rgba(139, 92, 246, 0.2), rgba(6, 182, 212, 0.2));
+            border: 1px solid rgba(139, 92, 246, 0.4);
+            border-radius: 16px;
+            padding: 1.5rem;
+            text-align: center;
+            margin-bottom: 2rem;
+            animation: fadeIn 0.5s ease-out;
+        }
+
+        .result-box h2 {
+            font-size: 1.2rem;
+            color: var(--text-muted);
+            font-weight: 500;
+        }
+
+        .result-box .price {
+            font-size: 2.5rem;
+            font-weight: 700;
+            color: #34d399;
+            margin-top: 0.25rem;
+        }
+
+        .form-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+            gap: 1.25rem;
+        }
+
+        .form-group {
+            display: flex;
+            flex-direction: column;
+            gap: 0.5rem;
+        }
+
+        .form-group.full-width {
+            grid-column: 1 / -1;
+        }
+
+        label {
+            font-size: 0.9rem;
+            font-weight: 600;
+            color: #cbd5e1;
+        }
+
+        input, select {
+            width: 100%;
+            padding: 0.8rem 1rem;
+            background: var(--input-bg);
+            border: 1px solid var(--card-border);
+            border-radius: 12px;
+            color: var(--text-main);
+            font-size: 0.95rem;
+            transition: all 0.2s ease;
+        }
+
+        input:focus, select:focus {
+            outline: none;
+            border-color: var(--primary);
+            box-shadow: 0 0 0 3px rgba(139, 92, 246, 0.3);
+        }
+
+        select option {
+            background: #1e293b;
+            color: #f8fafc;
+        }
+
+        .btn-submit {
+            margin-top: 1.5rem;
+            width: 100%;
+            padding: 1rem;
+            background: linear-gradient(135deg, var(--primary), var(--accent));
+            border: none;
+            border-radius: 12px;
+            color: white;
+            font-size: 1.1rem;
+            font-weight: 600;
+            cursor: pointer;
+            transition: transform 0.2s ease, box-shadow 0.2s ease;
+        }
+
+        .btn-submit:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 10px 20px -5px rgba(139, 92, 246, 0.5);
+        }
+
+        .btn-submit:active {
+            transform: translateY(0);
+        }
+
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(-10px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+    </style>
 </head>
 <body>
-    <h1>Laptop Price Prediction</h1>
+
+<div class="container">
+    <div class="header">
+        <h1>Laptop Price Predictor</h1>
+        <p>End-to-End Machine Learning Deployment</p>
+    </div>
+
+    {% if prediction %}
+    <div class="result-box">
+        <h2>Estimated Laptop Price</h2>
+        <div class="price">€{{ prediction }}</div>
+    </div>
+    {% endif %}
+
+    {% if error %}
+    <div class="result-box" style="border-color: #f87171; background: rgba(239, 68, 68, 0.1);">
+        <h2 style="color: #f87171;">Prediction Error</h2>
+        <p style="margin-top: 0.5rem;">{{ error }}</p>
+    </div>
+    {% endif %}
+
+    <form action="/predict" method="POST">
+        <div class="form-grid">
+            <div class="form-group full-width">
+                <label for="Laptop">Laptop Title / Description (Optional)</label>
+                <input type="text" id="Laptop" name="Laptop" placeholder="e.g. ASUS ExpertBook B1 B1502CBA Core i5 8GB 512GB" value="{{ form_data.Laptop if form_data else '' }}">
+            </div>
+
+            <div class="form-group">
+                <label for="Brand">Brand</label>
+                <select id="Brand" name="Brand" required>
+                    {% for brand in brands %}
+                    <option value="{{ brand }}" {% if form_data and form_data.Brand == brand %}selected{% endif %}>{{ brand }}</option>
+                    {% endfor %}
+                </select>
+            </div>
+
+            <div class="form-group">
+                <label for="Model">Model Series</label>
+                <select id="Model" name="Model" required>
+                    {% for model in models %}
+                    <option value="{{ model }}" {% if form_data and form_data.Model == model %}selected{% endif %}>{{ model }}</option>
+                    {% endfor %}
+                </select>
+            </div>
+
+            <div class="form-group">
+                <label for="Status">Status</label>
+                <select id="Status" name="Status" required>
+                    {% for status in statuses %}
+                    <option value="{{ status }}" {% if form_data and form_data.Status == status %}selected{% endif %}>{{ status }}</option>
+                    {% endfor %}
+                </select>
+            </div>
+
+            <div class="form-group">
+                <label for="CPU">CPU Processor</label>
+                <select id="CPU" name="CPU" required>
+                    {% for cpu in cpus %}
+                    <option value="{{ cpu }}" {% if form_data and form_data.CPU == cpu %}selected{% endif %}>{{ cpu }}</option>
+                    {% endfor %}
+                </select>
+            </div>
+
+            <div class="form-group">
+                <label for="RAM">RAM (GB)</label>
+                <input type="number" id="RAM" name="RAM" min="2" max="128" value="{{ form_data.RAM if form_data else 8 }}" required>
+            </div>
+
+            <div class="form-group">
+                <label for="Storage">Storage Capacity (GB)</label>
+                <input type="number" id="Storage" name="Storage" min="64" max="4000" step="64" value="{{ form_data.Storage if form_data else 512 }}" required>
+            </div>
+
+            <div class="form-group">
+                <label for="StorageType">Storage Type</label>
+                <select id="StorageType" name="StorageType" required>
+                    {% for st in storage_types %}
+                    <option value="{{ st }}" {% if form_data and form_data['Storage type'] == st %}selected{% endif %}>{{ st }}</option>
+                    {% endfor %}
+                </select>
+            </div>
+
+            <div class="form-group">
+                <label for="GPU">GPU Graphics Card</label>
+                <select id="GPU" name="GPU" required>
+                    {% for gpu in gpus %}
+                    <option value="{{ gpu }}" {% if form_data and form_data.GPU == gpu %}selected{% endif %}>{{ gpu }}</option>
+                    {% endfor %}
+                </select>
+            </div>
+
+            <div class="form-group">
+                <label for="Screen">Screen Size (Inches)</label>
+                <input type="number" id="Screen" name="Screen" min="10" max="20" step="0.1" value="{{ form_data.Screen if form_data else 15.6 }}" required>
+            </div>
+
+            <div class="form-group">
+                <label for="Touch">Touchscreen</label>
+                <select id="Touch" name="Touch" required>
+                    {% for t in touch_options %}
+                    <option value="{{ t }}" {% if form_data and form_data.Touch == t %}selected{% endif %}>{{ t }}</option>
+                    {% endfor %}
+                </select>
+            </div>
+        </div>
+
+        <button type="submit" class="btn-submit">Predict Laptop Price</button>
+    </form>
+</div>
+
 </body>
 </html>
