@@ -2,20 +2,51 @@ import os
 from flask import Flask, render_template, request
 import joblib
 import pandas as pd
+from sklearn.compose import ColumnTransformer
+from sklearn.preprocessing import OneHotEncoder
+from sklearn.pipeline import Pipeline
+from sklearn.ensemble import RandomForestRegressor
 
 app = Flask(__name__)
 
-# Resolve model path safely for local & Render deployment
+# Resolve model and data paths safely for local & Render deployment
 BASE_DIR = os.path.dirname(os.path.abspath(__file__))
 MODEL_PATH = os.path.join(BASE_DIR, "../models/laptop_price_model.pkl")
+DATA_PATH = os.path.join(BASE_DIR, "../data/processed/laptops_clean.csv")
 
-if not os.path.exists(MODEL_PATH):
-    MODEL_PATH = os.path.join(BASE_DIR, "../models/model.pkl")
+def train_fresh_model(data_path, save_path):
+    """Train a fresh pipeline if pickle loading fails due to environment mismatch."""
+    print("Training fresh model pipeline on dataset...")
+    df_clean = pd.read_csv(data_path)
+    t_col = 'Final Price' if 'Final Price' in df_clean.columns else 'Price'
+    X_raw = df_clean.drop(t_col, axis=1)
+    y_raw = df_clean[t_col]
 
-model = joblib.load(MODEL_PATH)
+    cat_cols = ["Laptop", "Status", "Brand", "Model", "CPU", "Storage type", "GPU", "Touch"]
+    prep = ColumnTransformer(
+        transformers=[("cat", OneHotEncoder(handle_unknown="ignore"), cat_cols)],
+        remainder="passthrough"
+    )
+    fresh_model = Pipeline([
+        ("preprocessor", prep),
+        ("model", RandomForestRegressor(n_estimators=100, random_state=42))
+    ])
+    fresh_model.fit(X_raw, y_raw)
+    os.makedirs(os.path.dirname(save_path), exist_ok=True)
+    joblib.dump(fresh_model, save_path)
+    return fresh_model
+
+# Load model safely with fallback
+try:
+    if os.path.exists(MODEL_PATH):
+        model = joblib.load(MODEL_PATH)
+    else:
+        model = train_fresh_model(DATA_PATH, MODEL_PATH)
+except Exception as err:
+    print(f"Pickle load error: {err}. Retraining model to match current environment...")
+    model = train_fresh_model(DATA_PATH, MODEL_PATH)
 
 # Load options for dropdowns dynamically from dataset
-DATA_PATH = os.path.join(BASE_DIR, "../data/processed/laptops_clean.csv")
 if os.path.exists(DATA_PATH):
     raw_df = pd.read_csv(DATA_PATH)
     BRANDS = sorted(raw_df["Brand"].dropna().unique().tolist())
