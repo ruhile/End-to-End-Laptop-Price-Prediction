@@ -5,7 +5,7 @@ import pandas as pd
 
 app = Flask(__name__)
 
-# Resolve model path safely
+# Resolve model path safely for local & Render deployment
 BASE_DIR = os.path.dirname(os.path.abspath(__file__))
 MODEL_PATH = os.path.join(BASE_DIR, "../models/laptop_price_model.pkl")
 
@@ -98,4 +98,5 @@ def predict():
         )
 
 if __name__ == "__main__":
-    app.run(debug=True, port=5000)
+    port = int(os.environ.get("PORT", 5000))
+    app.run(host="0.0.0.0", port=port)
